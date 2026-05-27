@@ -1,0 +1,14 @@
+{
+  "name": "custom-clothing-finder",
+  "version": "1.0.0",
+  "description": "定制服装客户发现工具 - 搜索Instagram/Facebook/TikTok发现需要定制服装的潜在客户，提供WhatsApp联系方式",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": ["social media", "lead generation", "custom clothing", "whatsapp"],
+  "license": "MIT"
+}

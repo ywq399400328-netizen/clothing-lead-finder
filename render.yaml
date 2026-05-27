@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: clothing-lead-finder
+    runtime: node
+    region: singapore
+    plan: free
+    buildCommand: ''
+    startCommand: node server.js
+    healthCheckPath: /api/ping

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>定制服装客户发现工具 - Social Clothing Lead Finder</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:100vh}
+.navbar{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);color:white;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,0.15)}
+.nav-brand{display:flex;align-items:center;gap:10px}
+.nav-logo{font-size:28px}
+.nav-title{font-size:18px;font-weight:600}
+.nav-tabs{display:flex;gap:4px}
+.nav-tab{background:transparent;color:rgba(255,255,255,0.7);border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;transition:all 0.2s}
+.nav-tab:hover{background:rgba(255,255,255,0.1);color:white}
+.nav-tab.active{background:rgba(255,255,255,0.15);color:white}
+@media(max-width:768px){.navbar{flex-direction:column;height:auto;padding:12px 16px;gap:8px}.nav-tabs{flex-wrap:wrap;justify-content:center}}
+.container{max-width:1200px;margin:0 auto;padding:24px}
+.page{display:none}
+.page.active{display:block}
+h2{font-size:20px;margin-bottom:4px}
+.card{background:white;border-radius:16px;padding:24px 28px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+.card h3{font-size:18px;margin-bottom:12px}
+.section-desc{color:#666;font-size:14px;margin-bottom:16px}
+.search-row{display:flex;gap:12px;margin-bottom:14px}
+.search-input{flex:1;padding:14px 18px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;outline:none;transition:border-color 0.2s}
+.search-input:focus{border-color:#4a6fa5}
+@media(max-width:768px){.search-row{flex-direction:column}}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:500;transition:all 0.2s;font-family:inherit;text-decoration:none;white-space:nowrap}
+.btn-primary{background:#4a6fa5;color:white}.btn-primary:hover{background:#3d5f8f}.btn-primary:disabled{background:#9ab0d0;cursor:not-allowed}
+.btn-success{background:#25D366;color:white}.btn-success:hover{background:#1da851}
+.btn-secondary{background:#6c757d;color:white}.btn-secondary:hover{background:#5a6268}
+.btn-danger{background:#dc3545;color:white}.btn-danger:hover{background:#c82333}
+.btn-sm{padding:8px 16px;font-size:13px;border-radius:8px}
+.btn-xs{padding:4px 10px;font-size:12px;border-radius:6px}
+.platform-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.platform-chip{display:flex;align-items:center;gap:6px;padding:8px 16px;border:2px solid #e0e0e0;border-radius:20px;cursor:pointer;font-size:14px;transition:all 0.2s;background:white;user-select:none}
+.platform-chip:hover{border-color:#4a6fa5;background:#f8faff}
+.platform-chip.selected{border-color:#4a6fa5;background:#eef3fb;font-weight:500}
+.platform-chip .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.form-select{padding:8px 12px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none;background:white;cursor:pointer;font-family:inherit}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:14px;color:#555;margin-bottom:4px;font-weight:500}
+.form-group input,.form-group textarea,.form-group select{width:100%;padding:10px 14px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none;font-family:inherit}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:#4a6fa5}
+.form-group textarea{min-height:60px;resize:vertical}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:768px){.form-row{grid-template-columns:1fr}}
+.loading-box{text-align:center;padding:40px 20px}
+.spinner{width:44px;height:44px;border:4px solid #e0e0e0;border-top:4px solid #4a6fa5;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.live-result{background:white;border-radius:12px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,0.08);margin-bottom:10px;border-left:4px solid #4a6fa5;animation:fadeIn 0.3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.live-result h4{font-size:15px;font-weight:600;margin-bottom:2px}
+.live-result .lr-url{font-size:12px;color:#1a73e8;margin-bottom:4px;word-break:break-all}
+.live-result .lr-snippet{font-size:13px;color:#444;line-height:1.5;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.live-result .lr-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.live-result .lr-actions{display:flex;gap:6px;flex-wrap:wrap}
+.lr-tag{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:500}
+.lr-tag.email{background:#e8f0fe;color:#1a73e8}.lr-tag.whatsapp{background:#dcf8c6;color:#075e54}
+.lead-card{background:white;border-radius:12px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,0.08);transition:all 0.15s;border-left:4px solid #ddd;margin-bottom:12px}
+.lead-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+.lead-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.lead-user{display:flex;align-items:center;gap:10px}
+.lead-avatar{width:38px;height:38px;border-radius:50%;background:#eef3fb;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;color:#4a6fa5}
+.lead-name{font-weight:600;font-size:15px}
+.lead-meta{font-size:12px;color:#888}
+.lead-bio{font-size:13px;color:#555;margin-bottom:8px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lead-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.tag{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:500}
+.tag-whatsapp{background:#dcf8c6;color:#075e54}.tag-email{background:#e8f0fe;color:#1a73e8}
+.lead-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.status-badge{display:inline-flex;align-items:center;gap:3px;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:500}
+.s-new{background:#e3f2fd;color:#1565c0}.s-contacted{background:#fff3e0;color:#e65100}
+.s-interested{background:#e8f5e9;color:#2e7d32}.s-converted{background:#fce4ec;color:#880e4f}
+.s-not_interested{background:#f5f5f5;color:#666}
+.toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px}
+.filter-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(2px)}
+.modal-box{background:white;border-radius:16px;width:90%;max-width:560px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:18px 24px;border-bottom:1px solid #eee}
+.modal-close{background:none;border:none;font-size:28px;cursor:pointer;color:#999;line-height:1;padding:0 4px}
+.modal-body{padding:20px 24px}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;padding:14px 24px;border-top:1px solid #eee}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px}
+.stat-card{background:white;border-radius:12px;padding:18px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+.stat-number{font-size:30px;font-weight:700;color:#4a6fa5}
+.stat-label{font-size:13px;color:#666;margin-top:2px}
+.stat-card.highlight{background:linear-gradient(135deg,#25D366,#128C7E);color:white}
+.stat-card.highlight .stat-number{color:white}.stat-card.highlight .stat-label{color:rgba(255,255,255,0.85)}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:768px){.charts-grid{grid-template-columns:1fr}}
+.chart-card{background:white;border-radius:12px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+.chart-card h3{font-size:15px;margin-bottom:12px}
+.bar-item{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bar-label{min-width:70px;font-size:13px;color:#333}
+.bar-track{flex:1;height:22px;background:#f0f0f0;border-radius:6px;overflow:hidden}
+.bar-fill{height:100%;border-radius:6px;transition:width 0.5s;display:flex;align-items:center;padding:0 8px;font-size:11px;color:white;font-weight:500;min-width:20px}
+.bar-value{min-width:24px;text-align:right;font-size:13px;color:#666}
+.toast-container{position:fixed;top:76px;right:20px;z-index:300;display:flex;flex-direction:column;gap:6px}
+.toast{padding:10px 18px;border-radius:10px;color:white;font-size:13px;font-weight:500;animation:slideIn 0.3s;box-shadow:0 4px 12px rgba(0,0,0,0.15);max-width:340px}
+.toast.success{background:#2d8a4e}.toast.error{background:#dc3545}.toast.info{background:#4a6fa5}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+.toast.out{animation:slideOut 0.3s forwards}@keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
+.empty-state{text-align:center;padding:40px 20px;color:#999}
+.manual-add-area{border:2px dashed #ccc;border-radius:12px;padding:18px;text-align:center;margin-bottom:16px;cursor:pointer;transition:all 0.2s;background:#fafafa}
+.manual-add-area:hover{border-color:#4a6fa5;background:#f0f4ff}
+.results-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:14px;margin-top:20px}
+.suggestions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.suggestions button{background:#f0f4ff;border:1px solid #d0d8e8;border-radius:14px;padding:5px 12px;font-size:12px;cursor:pointer;color:#4a6fa5;transition:all 0.15s;font-family:inherit}
+.suggestions button:hover{background:#4a6fa5;color:white;border-color:#4a6fa5}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-brand"><span class="nav-logo">👕</span><span class="nav-title">定制服装客户发现工具</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-page="search">🔍 搜索发现</button>
+    <button class="nav-tab" data-page="leads">📋 客户管理</button>
+    <button class="nav-tab" data-page="stats">📊 数据统计</button>
+  </div>
+</nav>
+
+<div class="container">
+
+<div id="page-search" class="page active">
+  <div class="card">
+    <h3>🔍 搜索社媒潜在客户</h3>
+    <p class="section-desc">输入关键词，搜索社交媒体上正在寻找定制服装的潜在客户</p>
+    <div class="search-row">
+      <input type="text" id="keywords" class="search-input" placeholder="输入英文关键词，如：custom dress, bespoke suit, tailored shirt..." onkeydown="if(event.key==='Enter')startSearch()">
+      <button id="searchBtn" class="btn btn-primary" onclick="startSearch()">🔍 搜索</button>
+    </div>
+    <div class="platform-label">选择目标平台：</div>
+    <div class="platform-grid" id="platformGrid"></div>
+    <div style="margin:6px 0 10px;display:flex;gap:8px">
+      <button class="btn btn-sm btn-secondary" onclick="selAll(true)">全选</button>
+      <button class="btn btn-sm btn-secondary" onclick="selAll(false)">取消</button>
+    </div>
+    <div class="suggestions">
+      <span style="font-size:12px;color:#888;align-self:center">快速：</span>
+      <button onclick="setKW('custom dress for wedding')">👰 婚纱</button>
+      <button onclick="setKW('custom suit bespoke')">🤵 西装</button>
+      <button onclick="setKW('custom hoodie printing')">👕 卫衣</button>
+      <button onclick="setKW('custom t-shirt design')">👚 T恤</button>
+      <button onclick="setKW('custom jacket need')">🧥 夹克</button>
+    </div>
+  </div>
+
+  <div id="loadArea" class="card" style="display:none">
+    <div class="loading-box">
+      <div class="spinner"></div>
+      <div id="loadText" style="font-size:15px;color:#555">正在搜索...</div>
+      <div id="loadDetail" style="font-size:13px;color:#888;margin-top:8px"></div>
+    </div>
+  </div>
+
+  <div id="resArea" style="display:none">
+    <div class="results-header">
+      <div><h3>📊 搜索结果</h3><span id="resCount" style="font-size:13px;color:#666"></span></div>
+      <button class="btn btn-sm btn-success" onclick="saveAll()">💾 全部保存</button>
+    </div>
+    <div id="resList"></div>
+  </div>
+
+  <div class="manual-add-area" onclick="showForm()">
+    <div style="font-size:26px;margin-bottom:4px">➕</div>
+    <div style="font-weight:500;color:#333">手动添加客户</div>
+    <div style="font-size:13px;color:#888">发现潜在客户？点击这里手动录入</div>
+  </div>
+
+  <div id="addForm" class="card" style="display:none">
+    <h3>📝 手动添加客户</h3><input type="hidden" id="editId">
+    <div class="form-row">
+      <div class="form-group"><label>平台</label>
+        <select id="fPlat"><option value="instagram">📷 Instagram</option><option value="facebook">📘 Facebook</option><option value="tiktok">🎵 TikTok</option><option value="pinterest">📌 Pinterest</option><option value="twitter">🐦 Twitter/X</option><option value="reddit">🔴 Reddit</option><option value="other">🌐 其他</option></select></div>
+      <div class="form-group"><label>用户名</label><input id="fUser" placeholder="@username"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>显示名称</label><input id="fName" placeholder="名字或昵称"></div>
+      <div class="form-group"><label>位置</label><input id="fLoc" placeholder="国家/城市"></div>
+    </div>
+    <div class="form-group"><label>主页</label><input id="fUrl" placeholder="https://..."></div>
+    <div class="form-group"><label>简介/帖子</label><textarea id="fBio"></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>邮箱</label><input id="fEmail" placeholder="email@example.com"></div>
+      <div class="form-group"><label>WhatsApp</label><input id="fWA" placeholder="+8613800138000"></div>
+    </div>
+    <div class="form-group"><label>备注</label><textarea id="fNotes"></textarea></div>
+    <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="saveForm()">💾 保存</button><button class="btn btn-secondary" onclick="hideForm()">取消</button></div>
+  </div>
+</div>
+
+<div id="page-leads" class="page">
+  <div class="toolbar">
+    <h2>📋 客户列表 (<span id="leadTotal">0</span>)</h2>
+    <div class="filter-row">
+      <select id="filtStat" class="form-select" onchange="renderLead()">
+        <option value="">全部</option><option value="new">新线索</option><option value="contacted">已联系</option>
+        <option value="interested">有意向</option><option value="converted">已转化</option><option value="not_interested">无意向</option>
+      </select>
+      <select id="filtPlat" class="form-select" onchange="renderLead()"></select>
+      <button class="btn btn-sm btn-success" onclick="expCSV()">📥 导出CSV</button>
+    </div>
+  </div>
+  <div id="leadList"></div>
+</div>
+
+<div id="page-stats" class="page">
+  <h2>📊 数据统计</h2>
+  <div class="stats-grid" id="statsGrid"></div>
+  <div class="charts-grid">
+    <div class="chart-card"><h3>平台分布</h3><div id="platChart"></div></div>
+    <div class="chart-card"><h3>状态分布</h3><div id="statChart"></div></div>
+  </div>
+</div>
+
+</div>
+
+<div id="modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)hideModal()">
+  <div class="modal-box">
+    <div class="modal-header"><h3 id="modalT">编辑客户</h3><button class="modal-close" onclick="hideModal()">&times;</button></div>
+    <div class="modal-body" id="modalB"></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="hideModal()">关闭</button><button class="btn btn-primary" onclick="saveModal()">保存</button></div>
+  </div>
+</div>
+
+<div id="toasts" class="toast-container"></div>
+
+<script>
+// ==================== DATA ====================
+const DB='clothing_leads';
+function ld(){try{return JSON.parse(localStorage.getItem(DB))||[]}catch(e){return[]}}
+function sv(l){localStorage.setItem(DB,JSON.stringify(l))}
+function gid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+
+const PF=[
+  {id:'instagram',n:'Instagram',ic:'📷',c:'#E4405F'},{id:'facebook',n:'Facebook',ic:'📘',c:'#1877F2'},
+  {id:'tiktok',n:'TikTok',ic:'🎵',c:'#111'},{id:'pinterest',n:'Pinterest',ic:'📌',c:'#BD081C'},
+  {id:'twitter',n:'Twitter/X',ic:'🐦',c:'#1DA1F2'},{id:'reddit',n:'Reddit',ic:'🔴',c:'#FF4500'}
+];
+const ST=[{id:'new',lb:'新线索',cl:'s-new'},{id:'contacted',lb:'已联系',cl:'s-contacted'},
+  {id:'interested',lb:'有意向',cl:'s-interested'},{id:'converted',lb:'已转化',cl:'s-converted'},{id:'not_interested',lb:'无意向',cl:'s-not_interested'}];
+
+const SQ={instagram:['site:instagram.com "custom clothing"','site:instagram.com "custom" dress','site:instagram.com "looking for" custom'],facebook:['site:facebook.com "custom clothing"','site:facebook.com "looking for" custom'],tiktok:['site:tiktok.com "custom clothing"','site:tiktok.com "custom outfit"'],pinterest:['site:pinterest.com "custom clothing"','site:pinterest.com "custom dress"'],twitter:['site:twitter.com "custom clothing"','site:x.com "custom" clothing'],reddit:['site:reddit.com "custom clothing"','site:reddit.com "where to buy" custom']};
+
+let results=[],busy=false;
+
+document.addEventListener('DOMContentLoaded',()=>{init();renderLead();renderStats();setupNav()});
+function setupNav(){document.querySelectorAll('.nav-tab').forEach(t=>{t.addEventListener('click',()=>{document.querySelectorAll('.nav-tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));t.classList.add('active');document.getElementById('page-'+t.dataset.page).classList.add('active');if(t.dataset.page==='leads')renderLead();if(t.dataset.page==='stats')renderStats()})})}
+function init(){document.getElementById('platformGrid').innerHTML=PF.map(p=>'<button class="platform-chip selected" data-id="'+p.id+'" onclick="this.classList.toggle(\'selected\')"><span class="dot" style="background:'+p.c+'"></span> '+p.ic+' '+p.n+'</button>').join('');
+  const s=document.getElementById('filtPlat');s.innerHTML='<option value="">全部</option>'+PF.map(p=>'<option value="'+p.id+'">'+p.ic+' '+p.n+'</option>').join('')}
+function sel(){return[...document.querySelectorAll('#platformGrid .platform-chip.selected')].map(e=>e.dataset.id)}
+function selAll(s){document.querySelectorAll('#platformGrid .platform-chip').forEach(e=>e.classList.toggle('selected',s))}
+function setKW(kw){document.getElementById('keywords').value=kw;startSearch()}
+
+// ==================== SEARCH (via server API) ====================
+async function startSearch(){
+  const kw=document.getElementById('keywords').value.trim();
+  if(!kw){toast('请输入关键词','error');document.getElementById('keywords').focus();return}
+  const s=sel();if(!s.length){toast('请选择平台','error');return}if(busy)return;
+  busy=true;results=[];
+  const btn=document.getElementById('searchBtn');btn.disabled=true;btn.textContent='⏳ 搜索中...';
+  const la=document.getElementById('loadArea');la.style.display='block';
+  document.getElementById('resArea').style.display='none';document.getElementById('loadText').textContent='正在搜索...';
+  document.getElementById('loadDetail').textContent='连接服务器';
+  try{
+    document.getElementById('loadDetail').textContent='发送搜索请求...';
+    const resp=await fetch('/api/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:kw,platforms:s,depth:'normal'})});
+    if(!resp.ok){const e=await resp.json().catch(()=>({}));throw new Error(e.error||'服务器错误('+resp.status+')')}
+    const d=await resp.json();results=d.results||[];
+    document.getElementById('loadText').textContent='✅ 搜索完成!';
+    document.getElementById('loadDetail').textContent='找到 '+results.length+' 个结果';
+  }catch(e){document.getElementById('loadText').textContent='❌ 搜索失败';document.getElementById('loadDetail').textContent=e.message;toast('搜索失败: '+e.message,'error')}
+  la.style.display='none';btn.disabled=false;btn.textContent='🔍 搜索';busy=false;
+  if(results.length){renderResults(results);document.getElementById('resArea').style.display='block';toast('✅ 找到 '+results.length+' 个','success')}
+}
+
+function renderResults(r){
+  document.getElementById('resCount').textContent='找到 '+r.length+' 个潜在客户';
+  document.getElementById('resList').innerHTML=r.map((x,i)=>{
+    const p=PF.find(p=>p.id===x.platform)||{ic:'🌐',n:x.platform||'其他'};
+    const tags=[];if(x.email)tags.push('<span class="lr-tag email">✉️ '+esc(x.email)+'</span>');if(x.whatsapp||x.phone)tags.push('<span class="lr-tag whatsapp">💬 '+esc(x.whatsapp||x.phone)+'</span>');
+    const name=esc(x.display_name||x.username||'未知'),url=esc(x.profile_url||''),bio=esc((x.bio||'').length>150?(x.bio||'').slice(0,150)+'...':x.bio||'');
+    const pi=PF.find(p=>p.id===x.platform);
+    return '<div class="live-result" style="border-left-color:'+(pi?pi.c:'#4a6fa5')+'">'+
+      '<div style="font-size:12px;color:#888">'+p.ic+' '+p.n+(x.username?' · @'+esc(x.username):'')+'</div>'+
+      '<h4>'+name+'</h4><div class="lr-url">'+url+'</div>'+bio?'<div class="lr-snippet">'+bio+'</div>':''+
+      (tags.length?'<div class="lr-tags">'+tags.join('')+'</div>':'')+
+      '<div class="lr-actions">'+
+      ((x.whatsapp||x.phone)?'<button class="btn btn-xs btn-success" onclick="openWA(\''+esc(x.whatsapp||x.phone)+'\')">💬 WhatsApp</button>':'')+
+      (url?'<a href="'+url+'" target="_blank" class="btn btn-xs btn-secondary">🔗 打开</a>':'')+
+      '<button class="btn btn-xs btn-primary" onclick="saveOne('+i+')">💾 保存</button></div></div>';
+  }).join('');
+}
+
+function saveOne(i){const r=results[i];if(!r)return;let d=ld();if(d.find(l=>l.profile_url===r.profile_url)){toast('已存在','info');return}
+  d.unshift({_id:gid(),platform:r.platform,username:r.username||'',display_name:r.display_name||'',profile_url:r.profile_url||'',bio:r.bio||'',email:r.email||'',phone:r.phone||'',whatsapp:r.whatsapp||'',location:'',notes:'',status:'new',created_at:new Date().toISOString(),updated_at:new Date().toISOString()});sv(d);toast('✅ 已保存','success');renderStats()}
+function saveAll(){let d=ld(),s=0;results.forEach(r=>{if(!d.find(l=>l.profile_url===r.profile_url)){d.unshift({_id:gid(),platform:r.platform,username:r.username||'',display_name:r.display_name||'',profile_url:r.profile_url||'',bio:r.bio||'',email:r.email||'',phone:r.phone||'',whatsapp:r.whatsapp||'',status:'new',created_at:new Date().toISOString(),updated_at:new Date().toISOString()});s++}});sv(d);toast('✅ 保存 '+s+' 个','success');renderStats()}
+
+// ==================== FORM ====================
+function saveForm(){const id=document.getElementById('editId').value;
+  const d={platform:document.getElementById('fPlat').value,username:document.getElementById('fUser').value.trim(),display_name:document.getElementById('fName').value.trim(),location:document.getElementById('fLoc').value.trim(),profile_url:document.getElementById('fUrl').value.trim(),bio:document.getElementById('fBio').value.trim(),email:document.getElementById('fEmail').value.trim(),whatsapp:document.getElementById('fWA').value.trim(),notes:document.getElementById('fNotes').value.trim()};
+  if(!d.username&&!d.display_name&&!d.whatsapp){toast('请输入用户名或WhatsApp','error');return}let l=ld();
+  if(id){const i=l.findIndex(x=>x._id===id);if(i>-1){l[i]={...l[i],...d,updated_at:new Date().toISOString()}}sv(l);toast('✅ 已更新','success')}
+  else{d._id=gid();d.status='new';d.created_at=new Date().toISOString();d.updated_at=d.created_at;l.unshift(d);sv(l);toast('✅ 已保存','success')}
+  clearF();document.getElementById('addForm').style.display='none';renderLead();renderStats()}
+function showForm(d){const f=document.getElementById('addForm');f.style.display='block';f.scrollIntoView({behavior:'smooth'});if(d){document.getElementById('editId').value=d._id||'';document.getElementById('fPlat').value=d.platform||'instagram';document.getElementById('fUser').value=d.username||'';document.getElementById('fName').value=d.display_name||'';document.getElementById('fLoc').value=d.location||'';document.getElementById('fUrl').value=d.profile_url||'';document.getElementById('fBio').value=d.bio||'';document.getElementById('fEmail').value=d.email||'';document.getElementById('fWA').value=d.whatsapp||'';document.getElementById('fNotes').value=d.notes||''}}
+function hideForm(){clearF();document.getElementById('addForm').style.display='none'}
+function clearF(){['editId','fPlat','fUser','fName','fLoc','fUrl','fBio','fEmail','fWA','fNotes'].forEach(id=>{const e=document.getElementById(id);if(e){if(e.tagName==='SELECT')e.selectedIndex=0;else e.value=''}})}
+
+// ==================== LEADS ====================
+function renderLead(){let l=ld();const sf=document.getElementById('filtStat').value,pf=document.getElementById('filtPlat').value;if(sf)l=l.filter(x=>x.status===sf);if(pf)l=l.filter(x=>x.platform===pf);
+  document.getElementById('leadTotal').textContent=l.length;
+  const list=document.getElementById('leadList');if(!l.length){list.innerHTML='<div class="empty-state"><div style="font-size:42px">📋</div><p>还没有客户数据</p></div>';return}
+  list.innerHTML=l.map(x=>{const p=PF.find(p=>p.id===x.platform)||{ic:'🌐',n:x.platform||'其他'};const s=ST.find(s=>s.id===x.status)||{lb:x.status,cl:'s-new'};
+    const a=(x.display_name||x.username||'?')[0].toUpperCase(),n=esc(x.display_name||x.username||'未知'),b=esc((x.bio||'').length>120?(x.bio||'').slice(0,120)+'...':x.bio||'');
+    const cl={instagram:'#E4405F',facebook:'#1877F2',tiktok:'#111',pinterest:'#BD081C',twitter:'#1DA1F2',reddit:'#FF4500',other:'#4a6fa5'};
+    return '<div class="lead-card" style="border-left-color:'+(cl[x.platform]||'#4a6fa5')+'"><div class="lead-header"><div class="lead-user"><div class="lead-avatar">'+a+'</div><div><div class="lead-name">'+n+'</div><div class="lead-meta">'+p.ic+' '+p.n+(x.username?' · @'+esc(x.username):'')+(x.location?' · 📍'+esc(x.location):'')+'</div></div></div><span class="status-badge '+s.cl+'">'+s.lb+'</span></div>'+
+      (b?'<div class="lead-bio">'+b+'</div>':'')+
+      '<div class="lead-tags">'+(x.whatsapp?'<span class="tag tag-whatsapp">💬 '+esc(x.whatsapp)+'</span>':'')+(x.email?'<span class="tag tag-email">✉️ '+esc(x.email)+'</span>':'')+'</div>'+
+      '<div class="lead-actions">'+(x.whatsapp?'<button class="btn btn-xs btn-success" onclick="openWA(\''+esc(x.whatsapp)+'\')">💬 WhatsApp</button>':'')+
+      (x.profile_url?'<a href="'+esc(x.profile_url)+'" target="_blank" class="btn btn-xs btn-secondary">🔗 主页</a>':'')+
+      '<button class="btn btn-xs btn-primary" onclick="editL(\''+x._id+'\')">✏️</button>'+
+      '<button class="btn btn-xs btn-danger" onclick="delL(\''+x._id+'\')">🗑️</button>'+
+      '<select class="form-select" style="font-size:12px;padding:4px 8px" onchange="setS(\''+x._id+'\',this.value)">'+ST.map(s2=>'<option value="'+s2.id+'"'+(x.status===s2.id?' selected':'')+'>'+s2.lb+'</option>').join('')+'</select></div></div>'
+  }).join('')}
+function setS(id,s){let l=ld();const i=l.findIndex(x=>x._id===id);if(i>-1){l[i].status=s;l[i].updated_at=new Date().toISOString()}sv(l);renderLead();renderStats()}
+function delL(id){if(!confirm('确定删除？'))return;sv(ld().filter(x=>x._id!==id));toast('🗑️ 已删除','success');renderLead();renderStats()}
+
+// ==================== MODAL ====================
+function editL(id){const l=ld().find(x=>x._id===id);if(!l)return;
+  const po=PF.map(p=>'<option value="'+p.id+'"'+(l.platform===p.id?' selected':'')+'>'+p.ic+' '+p.n+'</option>').join('');
+  const so=ST.map(s=>'<option value="'+s.id+'"'+(l.status===s.id?' selected':'')+'>'+s.lb+'</option>').join('');
+  document.getElementById('modalT').textContent='编辑客户';
+  document.getElementById('modalB').innerHTML='<input type="hidden" id="mId" value="'+l._id+'">'+
+    '<div class="form-row"><div class="form-group"><label>平台</label><select id="mPlat">'+po+'</select></div><div class="form-group"><label>用户名</label><input id="mUser" value="'+esc(l.username||'')+'"></div></div>'+
+    '<div class="form-row"><div class="form-group"><label>显示名称</label><input id="mName" value="'+esc(l.display_name||'')+'"></div><div class="form-group"><label>位置</label><input id="mLoc" value="'+esc(l.location||'')+'"></div></div>'+
+    '<div class="form-group"><label>主页</label><input id="mUrl" value="'+esc(l.profile_url||'')+'"></div>'+
+    '<div class="form-group"><label>简介</label><textarea id="mBio">'+esc(l.bio||'')+'</textarea></div>'+
+    '<div class="form-row"><div class="form-group"><label>邮箱</label><input id="mEmail" value="'+esc(l.email||'')+'"></div><div class="form-group"><label>WhatsApp</label><input id="mWA" value="'+esc(l.whatsapp||'')+'">'+(l.whatsapp?'<div style="margin-top:6px"><a href="https://wa.me/'+l.whatsapp.replace(/[^0-9]/g,'')+'" target="_blank" class="btn btn-xs btn-success">📱 打开WhatsApp</a></div>':'')+'</div></div>'+
+    '<div class="form-group"><label>状态</label><select id="mStat">'+so+'</select></div>'+
+    '<div class="form-group"><label>备注</label><textarea id="mNote">'+esc(l.notes||'')+'</textarea></div>';
+  document.getElementById('modal').style.display='flex'}
+function saveModal(){const id=document.getElementById('mId').value;let l=ld();const i=l.findIndex(x=>x._id===id);if(i===-1)return;
+  l[i]={...l[i],platform:document.getElementById('mPlat').value,username:document.getElementById('mUser').value.trim(),display_name:document.getElementById('mName').value.trim(),location:document.getElementById('mLoc').value.trim(),profile_url:document.getElementById('mUrl').value.trim(),bio:document.getElementById('mBio').value.trim(),email:document.getElementById('mEmail').value.trim(),whatsapp:document.getElementById('mWA').value.trim(),status:document.getElementById('mStat').value,notes:document.getElementById('mNote').value.trim(),updated_at:new Date().toISOString()}
+  sv(l);hideModal();toast('✅ 已更新','success');renderLead();renderStats()}
+function hideModal(){document.getElementById('modal').style.display='none'}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')hideModal()})
+
+// ==================== WHATSAPP ====================
+function openWA(p){const c=p.replace(/[^0-9]/g,'');if(c.length<7){toast('号码格式不对','error');return}window.open('https://wa.me/'+c,'_blank')}
+
+// ==================== EXPORT ====================
+function expCSV(){const l=ld();if(!l.length){toast('没有数据','info');return}
+  const sm={new:'新线索',contacted:'已联系',interested:'有意向',not_interested:'无意向',converted:'已转化'}
+  const h=['平台','用户名','显示名称','简介','邮箱','WhatsApp','位置','状态','主页','备注','创建时间']
+  const rows=l.map(x=>[x.platform,x.username,x.display_name,'"'+((x.bio||'').replace(/"/g,'""'))+'"',x.email,x.whatsapp,x.location,sm[x.status]||x.status,x.profile_url,'"'+((x.notes||'').replace(/"/g,'""'))+'"',x.created_at].join(','))
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+[h.join(','),...rows].join('\n')],{type:'text/csv;charset=utf-8'}))
+  a.download='leads_'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(a.href);toast('📥 已导出','success')}
+
+// ==================== STATS ====================
+function renderStats(){const l=ld(),t=l.length,w=l.filter(x=>x.whatsapp).length;
+  const bp={},bs={};PF.forEach(p=>bp[p.id]=0);ST.forEach(s=>bs[s.id]=0);l.forEach(x=>{if(bp[x.platform]!==undefined)bp[x.platform]++;if(bs[x.status]!==undefined)bs[x.status]++})
+  document.getElementById('statsGrid').innerHTML='<div class="stat-card"><div class="stat-number">'+t+'</div><div class="stat-label">总客户</div></div><div class="stat-card highlight"><div class="stat-number">'+w+'</div><div class="stat-label">有WhatsApp</div></div>'+ST.filter(s=>bs[s.id]>0).map(s=>'<div class="stat-card"><div class="stat-number">'+bs[s.id]+'</div><div class="stat-label">'+s.lb+'</div></div>').join('')
+  const mp=Math.max(...Object.values(bp),1),pc={instagram:'#E4405F',facebook:'#1877F2',tiktok:'#111',pinterest:'#BD081C',twitter:'#1DA1F2',reddit:'#FF4500'};
+  document.getElementById('platChart').innerHTML=PF.filter(p=>bp[p.id]>0).map(p=>'<div class="bar-item"><span class="bar-label">'+p.ic+'</span><div class="bar-track"><div class="bar-fill" style="width:'+(bp[p.id]/mp*100)+'%;background:'+pc[p.id]+'">'+(bp[p.id]/mp*100>15?bp[p.id]:'')+'</div></div><span class="bar-value">'+bp[p.id]+'</span></div>').join('')||'<div class="empty-state"><p>暂无数据</p></div>'
+  const ms=Math.max(...Object.values(bs),1),sc={new:'#1565c0',contacted:'#e65100',interested:'#2e7d32',converted:'#880e4f',not_interested:'#666'};
+  document.getElementById('statChart').innerHTML=ST.filter(s=>bs[s.id]>0).map(s=>'<div class="bar-item"><span class="bar-label">'+s.lb+'</span><div class="bar-track"><div class="bar-fill" style="width:'+(bs[s.id]/ms*100)+'%;background:'+sc[s.id]+'">'+(bs[s.id]/ms*100>15?bs[s.id]:'')+'</div></div><span class="bar-value">'+bs[s.id]+'</span></div>').join('')||'<div class="empty-state"><p>暂无数据</p></div>'}
+
+// ==================== UTILS ====================
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function toast(m,t='info'){const c=document.getElementById('toasts');const e=document.createElement('div');e.className='toast '+t;e.textContent=m;c.appendChild(e);setTimeout(()=>{e.classList.add('out');setTimeout(()=>e.remove(),300)},3500)}
+</script>
+</body>
+</html>
