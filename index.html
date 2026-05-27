@@ -287,7 +287,7 @@ function renderResults(r){
     const pi=PF.find(p=>p.id===x.platform);
     return '<div class="live-result" style="border-left-color:'+(pi?pi.c:'#4a6fa5')+'">'+
       '<div style="font-size:12px;color:#888">'+p.ic+' '+p.n+(x.username?' · @'+esc(x.username):'')+'</div>'+
-      '<h4>'+name+'</h4><div class="lr-url">'+url+'</div>'+bio?'<div class="lr-snippet">'+bio+'</div>':''+
+      '<h4>'+name+'</h4><div class="lr-url">'+url+'</div>'+(bio?'<div class="lr-snippet">'+bio+'</div>':'')+
       (tags.length?'<div class="lr-tags">'+tags.join('')+'</div>':'')+
       '<div class="lr-actions">'+
       ((x.whatsapp||x.phone)?'<button class="btn btn-xs btn-success" onclick="openWA(\''+esc(x.whatsapp||x.phone)+'\')">💬 WhatsApp</button>':'')+
